@@ -1,12 +1,12 @@
+print("Starting MySQL connection test...")
 import mysql.connector
-from mysql.connector import Error
-
+print ("Imported mysql.connector")
 HOST = "cssql.seattleu.edu"
 PORT = 3306
 USER = "ll_qpham5"
 PASSWORD = "HYxOW8OWEY3o52/4"
 DATABASE = "ll_qpham5"
-
+print("Defined connection parameters.")
 def main():
     try:
         conn = mysql.connector.connect(
