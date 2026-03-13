@@ -66,7 +66,9 @@ def main():
             (1, 1, 9, "Milestone 3 test", "Inserted from Python Milestone 3 script")
         )
 
-        # show the inserted row
+        #----------------------------
+        # VERIFY THE WRITE (SELECT)
+        #----------------------------
         run_select(
             cur,
             "Verify INSERT (latest reviews by user 1 at hotel 1)",
@@ -79,7 +81,9 @@ def main():
             """
 
         )
-        #Delete the inserted row to keep the database clean for the next run
+    #----------------------------
+    # CLEANUP THE WRITE (DELETE)
+    #----------------------------
         run_write(
             cur, conn,
             "CLEANUP: Delete the inserted review",
