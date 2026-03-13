@@ -364,7 +364,18 @@ delimiter ;
 
 DROP TRIGGER IF EXISTS insert_booking;
 
+use ll_qpham5;
 
+update Booking
+set status = 'Cancelled'
+where Booking_ID = 1;
+
+use ll_qpham5;
+
+update Booking
+set status = 'Cancelled'
+where Booking_ID = 1;
+select * from Booking;
   
   
   
