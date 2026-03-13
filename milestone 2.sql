@@ -361,6 +361,10 @@ create procedure calcBookingPrice(check_in_date date, check_out_date date, hotel
     set total_amount = price_per_night * nights;
 end|
 delimiter ;
+
+DROP TRIGGER IF EXISTS insert_booking;
+
+
   
   
   
