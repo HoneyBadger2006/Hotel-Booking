@@ -375,6 +375,7 @@ use ll_qpham5;
 update Booking
 set status = 'Cancelled'
 where Booking_ID = 1;
+
 select * from Booking;
   
   
