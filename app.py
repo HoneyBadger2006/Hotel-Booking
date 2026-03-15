@@ -92,16 +92,13 @@ HOME_BODY = """
   .wc-bg {
     width: 100%;
     height: 100%;
-    /* Use a direct string path to avoid nested rendering errors */
-    background-image: url("Hotel-Booking/static/ronaldo_and_messi.jpg");
+    background-image: url("/static/ronaldo_and_messi.jpg");
     background-repeat: no-repeat;
     background-position: center center;
     background-size: cover;
     position: absolute;
     top: 0; left: 0;
-    filter: brightness(0.5);
-    
-    /* Fade In Animation */
+    filter: brightness(0.55);
     opacity: 0;
     animation: revealImg 1.5s ease-in forwards;
     animation-delay: 0.3s;
@@ -122,22 +119,21 @@ HOME_BODY = """
     from { opacity: 0; } 
     to { opacity: 1; } 
   }
-  
+
   @keyframes fadeIn { 
     to { opacity: 1; } 
   }
 </style>
 
-<!-- WORLD CUP AD -->
 <div class="wc-ad-container shadow-lg fade-in">
   <div class="wc-bg"></div>
   <div class="wc-text">
     <div class="d-flex gap-2 mb-2">
-        <span class="badge text-bg-primary">🇺🇸 USA</span>
-        <span class="badge text-bg-danger">🇨🇦 Canada</span>
-        <span class="badge text-bg-success">🇲🇽 Mexico</span>
+        <span class="badge text-bg-primary">USA</span>
+        <span class="badge text-bg-danger">Canada</span>
+        <span class="badge text-bg-success">Mexico</span>
     </div>
-    <h2 class="fw-bold mb-1">NORTH AMERICA 2026</h2>
+    <h2 class="fw-bold mb-1">World Cup 2026</h2>
     <p class="mb-3">The World's Biggest Stage. One Champion.</p>
     <a href="/search" class="btn btn-info fw-bold px-4 text-white shadow">Book Your Stay</a>
   </div>
@@ -154,7 +150,9 @@ HOME_BODY = """
     <div class="card card-soft shadow-sm h-100 lift">
       <div class="card-body">
         <h5 class="card-title mb-1">{{h[1]}}</h5>
-        <div class="muted small mb-3">{{h[2]}}, {{h[3]}}</div>
+        <div class="muted small mb-3">
+          {{h[2]}}{% if h[3] %}, {{h[3]}}{% else %}, {{h[4]}}{% endif %}
+        </div>
         <div class="d-flex gap-2">
           <a class="btn btn-outline-primary btn-sm" href="/hotel/{{h[0]}}">View rooms</a>
           <a class="btn btn-primary btn-sm" href="/search?city={{h[2]}}">Search city</a>
@@ -165,6 +163,7 @@ HOME_BODY = """
   {% endfor %}
 </div>
 """
+
 
 
 
