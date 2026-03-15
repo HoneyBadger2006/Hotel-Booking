@@ -93,7 +93,7 @@ HOME_BODY = """
     width: 100%;
     height: 100%;
     /* Use a direct string path to avoid nested rendering errors */
-    background-image: url("/static/ronaldo_and_messi.jpg");
+    background-image: url("Hotel-Booking/static/ronaldo_and_messi.jpg");
     background-repeat: no-repeat;
     background-position: center center;
     background-size: cover;
@@ -330,7 +330,7 @@ SEARCH_BODY = """
 {% endif %}
 """
 
-MYBOOK_BODY = """
+BOOK_BODY = """
 <h4 class="mb-3">My bookings</h4>
 
 {% if msg %}
@@ -489,6 +489,8 @@ def search():
     if city or check_in or check_out:
         if not (check_in and check_out):
             error = "Please enter both check-in and check-out."
+        elif check_in >= check_out:
+            error = "Check-out date must be after check-in date."
         else:
             conn = get_conn()
             cur = conn.cursor()
