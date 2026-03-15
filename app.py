@@ -1,9 +1,9 @@
-from flask import Flask, request, redirect, session, render_template_string, url_for
+from flask import Flask, request,redirect, session, render_template_string, url_for
 import mysql.connector as mc
 from mysql.connector import Error
 from datetime import date
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='Hotel-booking/static')
 app.secret_key = "change_this_demo_secret"
 
 DB = dict(
@@ -76,47 +76,88 @@ BASE = """
 """
 
 HOME_BODY = """
-<div class="hero mb-4 fade-in">
-  <h2 class="mb-1">Find your next stay</h2>
-  <p class="mb-0">Demo UI inspired by Booking.com. Login, search, and book a room.</p>
-</div>
+<style>
+  .wc-ad-container {
+    position: relative;
+    height: 250px;
+    background: #011e41;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 30px;
+    border: 2px solid #00d4ff;
+    display: flex;
+    align-items: center;
+  }
 
-<div class="row g-3 mb-2">
-  <div class="col-12 col-lg-8">
-    <div class="card card-soft shadow-sm lift fade-in">
-      <div class="card-body">
-        <h5 class="mb-1">Deal of the day</h5>
-        <div class="muted">Limited-time promo for demo purposes</div>
-        <div class="mt-3 d-flex gap-2">
-          <a class="btn btn-dark btn-book" href="/search">Search deals</a>
-          <a class="btn btn-outline-primary btn-book" href="/my-bookings">My bookings</a>
-        </div>
-      </div>
+  .wc-bg {
+    width: 100%;
+    height: 100%;
+    /* Use a direct string path to avoid nested rendering errors */
+    background-image: url("/static/ronaldo_and_messi.jpg");
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: cover;
+    position: absolute;
+    top: 0; left: 0;
+    filter: brightness(0.5);
+    
+    /* Fade In Animation */
+    opacity: 0;
+    animation: revealImg 1.5s ease-in forwards;
+    animation-delay: 0.3s;
+  }
+
+  .wc-text {
+    position: relative;
+    z-index: 4;
+    color: white;
+    padding: 30px;
+    text-shadow: 2px 2px 10px rgba(0,0,0,0.9);
+    opacity: 0;
+    animation: fadeIn 0.8s forwards;
+    animation-delay: 1s;
+  }
+
+  @keyframes revealImg { 
+    from { opacity: 0; } 
+    to { opacity: 1; } 
+  }
+  
+  @keyframes fadeIn { 
+    to { opacity: 1; } 
+  }
+</style>
+
+<!-- WORLD CUP AD -->
+<div class="wc-ad-container shadow-lg fade-in">
+  <div class="wc-bg"></div>
+  <div class="wc-text">
+    <div class="d-flex gap-2 mb-2">
+        <span class="badge text-bg-primary">🇺🇸 USA</span>
+        <span class="badge text-bg-danger">🇨🇦 Canada</span>
+        <span class="badge text-bg-success">🇲🇽 Mexico</span>
     </div>
+    <h2 class="fw-bold mb-1">NORTH AMERICA 2026</h2>
+    <p class="mb-3">The World's Biggest Stage. One Champion.</p>
+    <a href="/search" class="btn btn-info fw-bold px-4 text-white shadow">Book Your Stay</a>
   </div>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mb-3 mt-3">
-  <h4 class="mb-0">Hotels</h4>
-  <a class="btn btn-primary btn-sm btn-book" href="/search">Search rooms</a>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">Featured Hotels</h4>
+  <a class="btn btn-primary btn-sm" href="/search">View all</a>
 </div>
 
 <div class="row g-3">
   {% for h in hotels %}
   <div class="col-12 col-md-6 col-lg-4">
-    <div class="card card-soft shadow-sm h-100 lift fade-in">
+    <div class="card card-soft shadow-sm h-100 lift">
       <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <h5 class="card-title mb-1">{{h[1]}}</h5>
-            <div class="muted small">{{h[2]}}{% if h[3] %}, {{h[3]}}{% endif %} · {{h[4]}}</div>
-          </div>
-          <span class="badge text-bg-light pill">hotel_id {{h[0]}}</span>
-        </div>
-
-        <div class="mt-3 d-flex gap-2">
-          <a class="btn btn-outline-primary btn-sm btn-book" href="/hotel/{{h[0]}}">View rooms</a>
-          <a class="btn btn-primary btn-sm btn-book" href="/search?city={{h[2]}}">Search city</a>
+        <h5 class="card-title mb-1">{{h[1]}}</h5>
+        <div class="muted small mb-3">{{h[2]}}, {{h[3]}}</div>
+        <div class="d-flex gap-2">
+          <a class="btn btn-outline-primary btn-sm" href="/hotel/{{h[0]}}">View rooms</a>
+          <a class="btn btn-primary btn-sm" href="/search?city={{h[2]}}">Search city</a>
         </div>
       </div>
     </div>
@@ -124,6 +165,8 @@ HOME_BODY = """
   {% endfor %}
 </div>
 """
+
+
 
 REGISTER_BODY = """
 <div class="row justify-content-center">
@@ -287,46 +330,12 @@ SEARCH_BODY = """
 {% endif %}
 """
 
-BOOK_BODY = """
-<div class="card card-soft shadow-sm">
-  <div class="card-body">
-    <h4 class="mb-1">Book room</h4>
-    <div class="muted mb-3">Hotel ID {{hotel_id}} · Room {{room_no}}</div>
-
-    {% if not user_id %}
-      <div class="alert alert-warning mb-3">You must login before booking.</div>
-      <a class="btn btn-primary" href="/login">Go to login</a>
-    {% else %}
-      <form method="post" class="row g-3">
-        <input type="hidden" name="hotel_id" value="{{hotel_id}}">
-        <input type="hidden" name="room_no" value="{{room_no}}">
-
-        <div class="col-12 col-md-5">
-          <label class="form-label">Check-in</label>
-          <input class="form-control" name="check_in" type="date" value="{{check_in}}" required>
-        </div>
-        <div class="col-12 col-md-5">
-          <label class="form-label">Check-out</label>
-          <input class="form-control" name="check_out" type="date" value="{{check_out}}" required>
-        </div>
-        <div class="col-12 col-md-2 d-grid align-items-end">
-          <button class="btn btn-primary btn-book" type="submit">Confirm</button>
-        </div>
-      </form>
-    {% endif %}
-
-    {% if error %}
-      <div class="alert alert-danger mt-3 mb-0">{{error}}</div>
-    {% endif %}
-    {% if ok %}
-      <div class="alert alert-success mt-3 mb-0">{{ok}}</div>
-    {% endif %}
-  </div>
-</div>
-"""
-
 MYBOOK_BODY = """
 <h4 class="mb-3">My bookings</h4>
+
+{% if msg %}
+  <div class="alert alert-info">{{msg}}</div>
+{% endif %}
 
 {% if not user_id %}
   <div class="alert alert-warning">Please login to view your bookings.</div>
@@ -336,7 +345,7 @@ MYBOOK_BODY = """
       <table class="table table-hover mb-0 align-middle">
         <thead class="table-light">
           <tr>
-            <th>booking_id</th><th>hotel</th><th>room</th><th>check-in</th><th>check-out</th><th>status</th><th>created_at</th>
+            <th>ID</th><th>Hotel</th><th>Room</th><th>Check-in</th><th>Check-out</th><th>Status</th><th>Created</th><th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -349,6 +358,26 @@ MYBOOK_BODY = """
             <td>{{b[5]}}</td>
             <td><span class="badge text-bg-light">{{b[6]}}</span></td>
             <td class="muted small">{{b[7]}}</td>
+            <td>
+              <div class="btn-group">
+                <!-- Cancel -->
+                <form method="post" action="/booking/{{b[0]}}/status" style="display:inline;">
+                  <input type="hidden" name="status" value="Cancelled">
+                  <button class="btn btn-outline-secondary btn-sm" type="submit">Cancel</button>
+                </form>
+
+                <!-- Refund -->
+                <form method="post" action="/booking/{{b[0]}}/status" style="display:inline;">
+                  <input type="hidden" name="status" value="Refunded">
+                  <button class="btn btn-outline-warning btn-sm" type="submit">Refund</button>
+                </form>
+
+                <!-- NEW: Delete -->
+                <form method="post" action="/booking/{{b[0]}}/delete" style="display:inline;" onsubmit="return confirm('Delete this booking permanently?');">
+                  <button class="btn btn-outline-danger btn-sm" type="submit">Delete</button>
+                </form>
+              </div>
+            </td>
           </tr>
           {% endfor %}
         </tbody>
@@ -356,19 +385,9 @@ MYBOOK_BODY = """
     </div>
   </div>
 {% endif %}
-{% if msg %}
-  <div class="alert alert-info">{{msg}}</div>
-{% endif %}
-<form method="post" action="/booking/{{b[0]}}/status" style="display:inline;">
-  <input type="hidden" name="status" value="Cancelled">
-  <button class="btn btn-outline-danger btn-sm" type="submit">Cancel</button>
-</form>
-
-<form method="post" action="/booking/{{b[0]}}/status" style="display:inline;">
-  <input type="hidden" name="status" value="Refunded">
-  <button class="btn btn-outline-warning btn-sm" type="submit">Refund</button>
-</form>
 """
+
+
 
 @app.route("/")
 def home():
@@ -575,6 +594,8 @@ def book():
 def my_bookings():
     user_id = current_user_id()
     bookings = []
+    msg = request.args.get("msg", "") # Define msg outside the if-block
+    
     if user_id:
         conn = get_conn()
         cur = conn.cursor()
@@ -588,8 +609,14 @@ def my_bookings():
         bookings = cur.fetchall()
         cur.close()
         conn.close()
-        msg = request.args.get("msg", "")
-    return render_template_string(BASE, body=render_template_string(MYBOOK_BODY, user_id=user_id, bookings=bookings), user_id=user_id)
+        
+    # Pass 'msg' into the template string so it can be displayed
+    return render_template_string(
+        BASE, 
+        body=render_template_string(MYBOOK_BODY, user_id=user_id, bookings=bookings, msg=msg), 
+        user_id=user_id
+    )
+
 
 @app.post("/booking/<int:booking_id>/status")
 def update_booking_status(booking_id):
@@ -633,6 +660,24 @@ def update_booking_status(booking_id):
     cur.close()
     conn.close()
     return redirect("/my-bookings?msg=Updated")
+@app.route("/booking/<int:booking_id>/delete", methods=["POST"])
+def delete_booking(booking_id):
+    user_id = current_user_id()
+    if not user_id:
+        return redirect("/login")
+
+    conn = get_conn()
+    cur = conn.cursor()
+    
+    # Ensure the user only deletes their own booking
+    cur.execute("DELETE FROM Booking WHERE booking_id = %s AND user_id = %s", (booking_id, user_id))
+    
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return redirect("/my-bookings?msg=Booking deleted successfully")
+
 
 if __name__ == "__main__":
     app.run(debug=True)
