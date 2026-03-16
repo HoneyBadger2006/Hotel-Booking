@@ -377,6 +377,8 @@ set status = 'Cancelled'
 where Booking_ID = 1;
 
 select * from Booking;
+
+
   
 select * from Guest; 
   

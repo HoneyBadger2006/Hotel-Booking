@@ -1,0 +1,25 @@
+.hero {
+  background: #0b5ed7;
+  color: white;
+  border-radius: 18px;
+  padding: 28px;
+}
+
+.card-soft {
+  border: 1px solid #e9ecef;
+  border-radius: 16px;
+}
+
+.lift {
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0,0,0,.12) !important;
+}
+
+.btn-book {
+  border-radius: 999px;
+  padding-left: 16px;
+  padding-right: 16px;
+}

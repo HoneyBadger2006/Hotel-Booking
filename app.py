@@ -3,7 +3,7 @@ import mysql.connector as mc
 from mysql.connector import Error
 from datetime import date
 
-app = Flask(__name__, static_folder='Hotel-booking/static')
+app = Flask(__name__, static_folder='static')
 app.secret_key = "change_this_demo_secret"
 
 DB = dict(
@@ -79,7 +79,7 @@ HOME_BODY = """
 <style>
   .wc-ad-container {
     position: relative;
-    height: 250px;
+    height: 400px;
     background: #011e41;
     border-radius: 12px;
     overflow: hidden;
@@ -91,19 +91,22 @@ HOME_BODY = """
 
   .wc-bg {
     width: 100%;
-    height: 100%;
+    height: 150%;
+    /* This path works because of your static_path fix in app.py */
     background-image: url("/static/ronaldo_and_messi.jpg");
     background-repeat: no-repeat;
+    margin-top: -10%;
     background-position: center center;
     background-size: cover;
     position: absolute;
     top: 0; left: 0;
     filter: brightness(0.55);
+    
+    /* Fade In Animation */
     opacity: 0;
     animation: revealImg 1.5s ease-in forwards;
     animation-delay: 0.3s;
   }
-
   .wc-text {
     position: relative;
     z-index: 4;
@@ -119,12 +122,13 @@ HOME_BODY = """
     from { opacity: 0; } 
     to { opacity: 1; } 
   }
-
+  
   @keyframes fadeIn { 
     to { opacity: 1; } 
   }
 </style>
-
+<img src="/static/ronaldo_and_messi.jpg" alt="World Cup 2026" style="display:none;">
+<!-- WORLD CUP AD -->
 <div class="wc-ad-container shadow-lg fade-in">
   <div class="wc-bg"></div>
   <div class="wc-text">
@@ -150,9 +154,7 @@ HOME_BODY = """
     <div class="card card-soft shadow-sm h-100 lift">
       <div class="card-body">
         <h5 class="card-title mb-1">{{h[1]}}</h5>
-        <div class="muted small mb-3">
-          {{h[2]}}{% if h[3] %}, {{h[3]}}{% else %}, {{h[4]}}{% endif %}
-        </div>
+        <div class="muted small mb-3">{{h[2]}}, {{h[3]}}</div>
         <div class="d-flex gap-2">
           <a class="btn btn-outline-primary btn-sm" href="/hotel/{{h[0]}}">View rooms</a>
           <a class="btn btn-primary btn-sm" href="/search?city={{h[2]}}">Search city</a>
@@ -163,7 +165,6 @@ HOME_BODY = """
   {% endfor %}
 </div>
 """
-
 
 
 
@@ -385,8 +386,92 @@ BOOK_BODY = """
   </div>
 {% endif %}
 """
+BOOK_FORM_BODY = """
+<div class="row justify-content-center">
+  <div class="col-12 col-md-7">
+    <div class="card card-soft shadow-sm">
+      <div class="card-body">
+        <h4 class="mb-3">Book room</h4>
+
+        <form method="post">
+          <input type="hidden" name="hotel_id" value="{{hotel_id}}">
+          <input type="hidden" name="room_no" value="{{room_no}}">
+
+          <div class="mb-3">
+            <label class="form-label">Hotel ID</label>
+            <input class="form-control" value="{{hotel_id}}" disabled>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Room No</label>
+            <input class="form-control" value="{{room_no}}" disabled>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Check-in</label>
+            <input class="form-control" type="date" name="check_in" value="{{check_in}}" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Check-out</label>
+            <input class="form-control" type="date" name="check_out" value="{{check_out}}" required>
+          </div>
+
+          <button class="btn btn-primary w-100" type="submit">Confirm booking</button>
+        </form>
+
+        {% if error %}
+          <div class="alert alert-danger mt-3 mb-0">{{error}}</div>
+        {% endif %}
+
+        {% if ok %}
+          <div class="alert alert-success mt-3 mb-0">{{ok}}</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+"""
 
 
+MYBOOK_BODY = """
+<h4 class="mb-3">My bookings</h4>
+{% if msg %}<div class="alert alert-info">{{msg}}</div>{% endif %}
+
+{% if not user_id %}
+  <div class="alert alert-warning">Please login to view your bookings.</div>
+{% else %}
+  <div class="card card-soft shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 align-middle">
+        <thead class="table-light">
+          <tr><th>ID</th><th>Hotel</th><th>Room</th><th>Check-in</th><th>Check-out</th><th>Status</th><th>Created</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          {% for b in bookings %}
+          <tr>
+            <td class="fw-semibold">{{b[0]}}</td>
+            <td>{{b[1]}} <span class="muted small">(id {{b[2]}})</span></td>
+            <td>{{b[3]}}</td>
+            <td>{{b[4]}}</td>
+            <td>{{b[5]}}</td>
+            <td><span class="badge text-bg-light">{{b[6]}}</span></td>
+            <td class="muted small">{{b[7]}}</td>
+            <td>
+              <div class="btn-group">
+                <form method="post" action="/booking/{{b[0]}}/status" style="display:inline;"><input type="hidden" name="status" value="Cancelled"><button class="btn btn-outline-secondary btn-sm" type="submit">Cancel</button></form>
+                <form method="post" action="/booking/{{b[0]}}/status" style="display:inline;"><input type="hidden" name="status" value="Refunded"><button class="btn btn-outline-warning btn-sm" type="submit">Refund</button></form>
+                <form method="post" action="/booking/{{b[0]}}/delete" style="display:inline;" onsubmit="return confirm('Delete?');"><button class="btn btn-outline-danger btn-sm" type="submit">Delete</button></form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endif %}
+"""
 
 @app.route("/")
 def home():
@@ -463,19 +548,29 @@ def hotel_page(hotel_id):
     cur.execute("select hotel_id, name, city, state, country from Hotel where hotel_id=%s", (hotel_id,))
     hotel = cur.fetchone()
 
+    if not hotel:
+        cur.close()
+        conn.close()
+        return "Hotel not found", 404
+
     cur.execute("""
         select r.room_no, rt.name, rt.capacity, rt.price_per_night, r.description
         from Room r
         join Room_Type rt on rt.room_type_id = r.room_type_id
         where r.hotel_id=%s
-        order by r.room_no;
+        order by r.room_no
     """, (hotel_id,))
     rooms = cur.fetchall()
 
     cur.close()
     conn.close()
 
-    return render_template_string(BASE, body=render_template_string(HOTEL_BODY, hotel=hotel, rooms=rooms), user_id=current_user_id())
+    return render_template_string(
+        BASE,
+        body=render_template_string(HOTEL_BODY, hotel=hotel, rooms=rooms),
+        user_id=current_user_id()
+    )
+
 
 @app.route("/search")
 def search():
@@ -488,8 +583,6 @@ def search():
     if city or check_in or check_out:
         if not (check_in and check_out):
             error = "Please enter both check-in and check-out."
-        elif check_in >= check_out:
-            error = "Check-out date must be after check-in date."
         else:
             conn = get_conn()
             cur = conn.cursor()
@@ -534,62 +627,101 @@ def book():
     error = ""
     ok = ""
 
+    if not user_id:
+        return redirect("/login")
+
     if request.method == "GET":
         hotel_id = request.args.get("hotel_id", "")
         room_no = request.args.get("room_no", "")
         check_in = request.args.get("check_in", "")
         check_out = request.args.get("check_out", "")
+
         return render_template_string(
             BASE,
-            body=render_template_string(BOOK_BODY, user_id=user_id, hotel_id=hotel_id, room_no=room_no,
-                                        check_in=check_in, check_out=check_out, error=error, ok=ok),
+            body=render_template_string(
+                BOOK_FORM_BODY,
+                hotel_id=hotel_id,
+                room_no=room_no,
+                check_in=check_in,
+                check_out=check_out,
+                error=error,
+                ok=ok
+            ),
             user_id=user_id
         )
 
-    hotel_id = int(request.form["hotel_id"])
-    room_no = int(request.form["room_no"])
-    check_in = request.form["check_in"]
-    check_out = request.form["check_out"]
+    try:
+        hotel_id = int(request.form["hotel_id"])
+        room_no = int(request.form["room_no"])
+        check_in = request.form["check_in"]
+        check_out = request.form["check_out"]
 
-    if not user_id:
-        error = "Please login first."
-    else:
-        try:
+        if not check_in or not check_out:
+            error = "Please enter both check-in and check-out dates."
+        elif check_in >= check_out:
+            error = "Check-out date must be after check-in date."
+        else:
             conn = get_conn()
             cur = conn.cursor()
 
-            # quick conflict check (your trigger can also enforce this)
+            # verify room exists in hotel
             cur.execute("""
                 select 1
-                from Booking b
-                where b.hotel_id=%s and b.room_no=%s and b.status='Confirmed'
-                  and %s < b.check_out_date and %s > b.check_in_date
-                limit 1;
-            """, (hotel_id, room_no, check_in, check_out))
-            conflict = cur.fetchone()
+                from Room
+                where hotel_id=%s and room_no=%s
+                limit 1
+            """, (hotel_id, room_no))
+            room_exists = cur.fetchone()
 
-            if conflict:
-                error = "Conflict: room already booked for those dates."
+            if not room_exists:
+                error = "Invalid hotel or room."
             else:
+                # conflict check
                 cur.execute("""
-                    insert into Booking (user_id, room_no, hotel_id, check_in_date, check_out_date, status, created_at)
-                    values (%s,%s,%s,%s,%s,'Confirmed', now());
-                """, (user_id, room_no, hotel_id, check_in, check_out))
-                conn.commit()
-                ok = "Booking created!"
+                    select 1
+                    from Booking b
+                    where b.hotel_id=%s
+                      and b.room_no=%s
+                      and b.status='Confirmed'
+                      and %s < b.check_out_date
+                      and %s > b.check_in_date
+                    limit 1
+                """, (hotel_id, room_no, check_in, check_out))
+                conflict = cur.fetchone()
+
+                if conflict:
+                    error = "Conflict: room already booked for those dates."
+                else:
+                    cur.execute("""
+                        insert into Booking
+                        (user_id, room_no, hotel_id, check_in_date, check_out_date, status, created_at)
+                        values (%s, %s, %s, %s, %s, 'Confirmed', now())
+                    """, (user_id, room_no, hotel_id, check_in, check_out))
+                    conn.commit()
+                    ok = "Booking created successfully."
 
             cur.close()
             conn.close()
 
-        except Error as e:
-            error = str(e)
+    except ValueError:
+        error = "Invalid hotel or room number."
+    except Error as e:
+        error = str(e)
 
     return render_template_string(
         BASE,
-        body=render_template_string(BOOK_BODY, user_id=user_id, hotel_id=hotel_id, room_no=room_no,
-                                    check_in=check_in, check_out=check_out, error=error, ok=ok),
+        body=render_template_string(
+            BOOK_FORM_BODY,
+            hotel_id=hotel_id,
+            room_no=room_no,
+            check_in=check_in,
+            check_out=check_out,
+            error=error,
+            ok=ok
+        ),
         user_id=user_id
     )
+
 
 @app.route("/my-bookings")
 def my_bookings():

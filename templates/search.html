@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="hero mb-4">
+  <h3 class="mb-2">Search</h3>
+  <form class="row g-2" method="get" action="{{ url_for('search') }}">
+    <div class="col-12 col-md-5">
+      <input class="form-control" name="city" value="{{city}}" placeholder="City (e.g., Seattle)">
+    </div>
+    <div class="col-6 col-md-3">
+      <input class="form-control" name="check_in" type="date" value="{{check_in}}">
+    </div>
+    <div class="col-6 col-md-3">
+      <input class="form-control" name="check_out" type="date" value="{{check_out}}">
+    </div>
+    <div class="col-12 col-md-1 d-grid">
+      <button class="btn btn-dark" type="submit">Go</button>
+    </div>
+  </form>
+</div>
+
+{% if error %}
+  <div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+
+{% if msg %}
+  <div class="alert alert-info">{{ msg }}</div>
+{% endif %}
+
+{% if results is not none %}
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h5 class="mb-0">Results</h5>
+    <div class="text-secondary small">{{ results|length }} matches</div>
+  </div>
+
+  <div class="card card-soft shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Hotel</th><th>City</th><th>Room</th><th>Type</th><th>Capacity</th><th>Price/night</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for x in results %}
+          <tr>
+            <td>
+              <div class="fw-semibold">{{x[0]}}</div>
+              <div class="text-secondary small">hotel_id {{x[1]}}</div>
+            </td>
+            <td>{{x[2]}}</td>
+            <td>{{x[3]}}</td>
+            <td>{{x[4]}}</td>
+            <td>{{x[5]}}</td>
+            <td>${{x[6]}}</td>
+            <td class="text-end">
+              {% if user_id %}
+              <form method="post" action="{{ url_for('book') }}" class="d-inline">
+                <input type="hidden" name="hotel_id" value="{{x[1]}}">
+                <input type="hidden" name="room_no" value="{{x[3]}}">
+                <input type="hidden" name="check_in" value="{{check_in}}">
+                <input type="hidden" name="check_out" value="{{check_out}}">
+                <button class="btn btn-primary btn-sm btn-book" type="submit">Book</button>
+              </form>
+              {% else %}
+                <a class="btn btn-outline-primary btn-sm btn-book" href="{{ url_for('login') }}">Login to book</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}
